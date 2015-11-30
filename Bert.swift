@@ -24,26 +24,22 @@ enum BertType: UInt8 {
     case SmallInteger = 97
     case Integer = 98
     case SmallBig = 110
-    //        case LargetBig = 111
-    //        case Float = 99
+//        case LargetBig = 111
+//        case Float = 99
     case NewFloat = 70
     case String = 107
-    //        case Port = 102
-    //        case Pid = 103
+//        case Port = 102
+//        case Pid = 103
     case SmallTuple = 104
     case LargeTuple = 105
     case List = 108
-    //        case Reference = 101
-    //        case NewReference = 114
+//        case Reference = 101
+//        case NewReference = 114
     case Nil = 106
 }
 
 class BertObject {
     var type: UInt8 = 0
-    
-//    func size () -> Int {
-//        preconditionFailure("This method must be overriden")
-//    }
 }
 
 class BertAtom: BertObject {
@@ -52,13 +48,6 @@ class BertAtom: BertObject {
     init (fromString string: String) {
         value = string
     }
-//    
-//    override func size () -> Int {
-//        if value.characters.count > 255 {
-//            return -1
-//        }
-//        return 3 + value.characters.count
-//    }
 }
 
 class BertBool: BertObject {
@@ -67,10 +56,6 @@ class BertBool: BertObject {
     init (fromBool b: Bool) {
         value = b
     }
-//
-//    override func size () -> Int {
-//        return 2
-//    }
 }
 
 class BertUndefined: BertAtom {
@@ -158,6 +143,11 @@ class Bert {
 
     class func getEncodeSize (object: BertObject) throws -> Int {
         switch getObjectClassName(object) {
+            case "BertBool":
+                let bool = (object as! BertBool)
+                return 1 + 2 + (bool.value ? 4 : 5)
+            case "BertUndefined":
+                return 1 + 2 + 9
             case "BertAtom":
                 let atom = (object as! BertAtom)
                 return 1 + 2 + atom.value.characters.count
@@ -201,6 +191,8 @@ class Bert {
     class func encodeInner(object: BertObject, inout data: [UInt8], inout offset: Int) throws {
         switch getObjectClassName(object) {
             case "BertAtom":       encodeAtom(object as! BertAtom, data: &data, offset: &offset)
+            case "BertBool":       encodeBool(object as! BertBool, data: &data, offset: &offset)
+            case "BertUndefined":  encodeAtom(object as! BertUndefined, data: &data, offset: &offset)
             case "BertBinary":     encodeBinary(object as! BertBinary, data: &data, offset: &offset)
             case "BertNumber":     encodeNumber(object as! BertNumber, data: &data, offset: &offset)
             case "BertFloat":      encodeFloat(object as! BertFloat, data: &data, offset: &offset)
@@ -221,6 +213,11 @@ class Bert {
         
         memcpy(&data[offset], (atom.value as NSString).UTF8String, Int(length))
         offset += Int(length)
+    }
+    
+    class func encodeBool(bool: BertBool, inout data: [UInt8], inout offset: Int) {
+        let atom = BertAtom(fromString: (bool.value ? "true" : "false"))
+        encodeAtom(atom, data: &data, offset: &offset)
     }
     
     class func encodeBinary(binary: BertBinary, inout data: [UInt8], inout offset: Int) {
