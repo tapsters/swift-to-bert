@@ -19,6 +19,13 @@ class BertTests: XCTestCase {
     override func tearDown() {
         super.tearDown()
     }
+    
+    func checkEncoding(result: BertObject, data: [UInt8]) throws {
+        let inversedResult = try Bert.encode(result)
+        var inversetResultBytes = [UInt8](count: inversedResult.length, repeatedValue: 0)
+        inversedResult.getBytes(&inversetResultBytes, length: inversedResult.length)
+        XCTAssertEqual(inversetResultBytes, data)
+    }
 
     func testAtom() {
         let data: [UInt8] = [131,100,0,4,99,104,97,116]
@@ -27,8 +34,7 @@ class BertTests: XCTestCase {
             result = try Bert.decode(NSData(bytes: data, length: data.count)) as! BertAtom
             XCTAssertEqual(result.value, "chat")
 
-            let inversedResult = try Bert.encode(result)
-            XCTAssertEqual(inversedResult, data)
+            try checkEncoding(result, data: data)
         } catch {
             XCTFail()
         }
@@ -43,8 +49,7 @@ class BertTests: XCTestCase {
             result.value.getBytes(&buffer, length:result.value.length)
             XCTAssertEqual(buffer, [1,2,3])
 
-            let inversedResult = try Bert.encode(result)
-            XCTAssertEqual(inversedResult, data)
+            try checkEncoding(result, data: data)
         } catch {
             XCTFail()
         }
@@ -57,8 +62,7 @@ class BertTests: XCTestCase {
             result = try Bert.decode(NSData(bytes: data, length: data.count)) as! BertNumber
             XCTAssertEqual(result.value, 35)
             
-            let inversedResult = try Bert.encode(result)
-            XCTAssertEqual(inversedResult, data)
+            try checkEncoding(result, data: data)
         } catch {
             XCTFail()
         }
@@ -71,8 +75,7 @@ class BertTests: XCTestCase {
             result = try Bert.decode(NSData(bytes: data, length: data.count)) as! BertNumber
             XCTAssertEqual(result.value, 1000000000)
             
-            let inversedResult = try Bert.encode(result)
-            XCTAssertEqual(inversedResult, data)
+            try checkEncoding(result, data: data)
         } catch {
             XCTFail()
         }
@@ -85,8 +88,7 @@ class BertTests: XCTestCase {
             result = try Bert.decode(NSData(bytes: data, length: data.count)) as! BertNumber
             XCTAssertEqual(result.value, 72057594037927935)
             
-            let inversedResult = try Bert.encode(result)
-            XCTAssertEqual(inversedResult, data)
+            try checkEncoding(result, data: data)
         } catch {
             XCTFail()
         }
@@ -99,8 +101,7 @@ class BertTests: XCTestCase {
             result = try Bert.decode(NSData(bytes: data, length: data.count)) as! BertFloat
             XCTAssertEqual(result.value, 25.3)
             
-            let inversedResult = try Bert.encode(result)
-            XCTAssertEqual(inversedResult, data)
+            try checkEncoding(result, data: data)
         } catch {
             XCTFail()
         }
@@ -113,8 +114,7 @@ class BertTests: XCTestCase {
             result = try Bert.decode(NSData(bytes: data, length: data.count)) as! BertString
             XCTAssertEqual(result.value, "hello")
             
-            let inversedResult = try Bert.encode(result)
-            XCTAssertEqual(inversedResult, data)
+            try checkEncoding(result, data: data)
         } catch {
             XCTFail()
         }
@@ -130,8 +130,7 @@ class BertTests: XCTestCase {
             XCTAssertEqual((result.elements[1] as! BertAtom).value, "chat")
             XCTAssertEqual((result.elements[2] as! BertString).value, "hello")
             
-            let inversedResult = try Bert.encode(result)
-            XCTAssertEqual(inversedResult, data)
+            try checkEncoding(result, data: data)
         } catch {
             XCTFail()
         }
@@ -147,8 +146,7 @@ class BertTests: XCTestCase {
             XCTAssertEqual((result.elements[1] as! BertAtom).value, "chat")
             XCTAssertEqual((result.elements[2] as! BertString).value, "hello")
             
-            let inversedResult = try Bert.encode(result)
-            XCTAssertEqual(inversedResult, data)
+            try checkEncoding(result, data: data)
         } catch {
             XCTFail()
         }

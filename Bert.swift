@@ -122,7 +122,7 @@ class BertList: BertObject {
 
 class Bert {
     
-    class func encode (object: BertObject) throws -> [UInt8] {
+    class func encode (object: BertObject) throws -> NSData {
         let length = try getEncodeSize(object)
         var offset: Int = 0
         var data = [UInt8](count: length + 1, repeatedValue: 0)
@@ -131,7 +131,7 @@ class Bert {
         
         try encodeInner(object, data: &data, offset: &offset)
         
-        return data
+        return NSData(bytes: data, length: length + 1)
     }
     
     class func getObjectClassName(object: BertObject) -> String {
@@ -268,7 +268,7 @@ class Bert {
         memcpy(&data[offset], &i, sizeof(Double))
         offset += 8
     }
-    
+
     class func encodeString(string: BertString, inout data: [UInt8], inout offset: Int) {
         data[offset++] = BertType.String.rawValue
         
@@ -325,6 +325,9 @@ class Bert {
         if header != BertType.Version.rawValue {
             throw BertError.NotValidErlangTerm
         }
+        
+        var printBuffer = [UInt8](count: data.length, repeatedValue: 0)
+        data.getBytes(&printBuffer, length: data.length)
         
         return try decodeInner(data, offset: &offset)
     }
@@ -499,8 +502,10 @@ class Bert {
         }
         
         var elements = [BertObject]()
-        for _ in 0...n-1 {
-            elements.append(try decodeInner(data, offset: &offset))
+        if n > 0 {
+            for _ in 0...n-1 {
+                elements.append(try decodeInner(data, offset: &offset))
+            }
         }
 
         return BertTuple(fromElements: elements)
@@ -516,8 +521,10 @@ class Bert {
         let n = Int(UInt32(UnsafePointer<UInt32>(buffer).memory.bigEndian))
         
         var elements = [BertObject]()
-        for _ in 0...n-1 {
-            elements.append(try decodeInner(data, offset: &offset))
+        if n > 0 {
+            for _ in 0...n-1 {
+                elements.append(try decodeInner(data, offset: &offset))
+            }
         }
         
         data.getBytes(&buffer, range: NSMakeRange(offset, 1))
