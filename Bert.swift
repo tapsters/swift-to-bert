@@ -316,6 +316,10 @@ class Bert {
     }
 
     class func decode (data: NSData) throws -> BertObject {
+        if data.length == 0 {
+            return BertUndefined()
+        }
+        
         var offset = 0
         var buffer = [UInt8](count: 1, repeatedValue: 0)
 
@@ -337,7 +341,7 @@ class Bert {
 
         data.getBytes(&buffer, range: NSMakeRange(offset, 1))
         let type = buffer[0]
-        
+
         switch type {
             case BertType.Atom.rawValue:         return try decodeAtom(data, offset: &offset)
             case BertType.SmallAtom.rawValue:    return try decodeAtom(data, offset: &offset)
@@ -350,6 +354,7 @@ class Bert {
             case BertType.SmallTuple.rawValue:   return try decodeTuple(data, offset: &offset)
             case BertType.LargeTuple.rawValue:   return try decodeTuple(data, offset: &offset)
             case BertType.List.rawValue:         return try decodeList(data, offset: &offset)
+            case BertType.Nil.rawValue:          return     decodeNil(data, offset: &offset)
         default:
             throw BertError.UnexpectedErlangType
         }
@@ -527,11 +532,18 @@ class Bert {
             }
         }
         
-        data.getBytes(&buffer, range: NSMakeRange(offset, 1))
-        if (buffer[0] == BertType.Nil.rawValue) {
-            offset++
+        if data.length > offset {
+            data.getBytes(&buffer, range: NSMakeRange(offset, 1))
+            if (buffer[0] == BertType.Nil.rawValue) {
+                offset++
+            }
         }
         
         return BertList(fromElements: elements)
+    }
+    
+    class func decodeNil(data: NSData, inout offset: Int) -> BertObject {
+        offset++
+        return BertList(fromElements: [])
     }
 }
